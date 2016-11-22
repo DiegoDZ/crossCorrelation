@@ -4,7 +4,11 @@ Created on Mon Nov 14 2016
 
 Autor: DiegoDZ
 
-Compute the cross correlation of all columns of two input matrix, A and B.
+Compute the cross correlation between all columns of two input matrix, A and B,
+using the Fast Fourier Transform.
+
+run: python crossCorrelation.py input_A input_B > output
+
 """
 import numpy as np
 import sys
@@ -22,27 +26,30 @@ def crossCorrelation(arg1,arg2):
     if len(A) != len(B) or len(A[0]) != len(B[0]):
         sys.exit("Error: A and B do not have the same size")
 
-    #Take FFT of each column of both input matrix.
-    #Multiply one resulting transform by the comples conjugate of the other.
-    #Calculate the inverse transform of the product.
-    CAB = np.zeros((nSteps, nNodes))
+    #Cross-correlation works as follows:
+    #1. Take FFT of each column of both input matrix
+    #2. Multiply one resulting transform by the complex conjugate of the other
+    #3. Calculate the inverse transform of the product
+
+    a = np.zeros((nSteps, nNodes),dtype=complex)
+    b = np.zeros((nSteps, nNodes),dtype=complex)
     for i in range(0,nNodes,1):
-         CAB[:,i] = np.fft.ifft(np.fft.fft(A[:,i] - np.mean(A[:,i]) ) \
-         * np.conjugate(np.fft.fft(B[:,i]- np.mean(B[:,i]))))
+        a[:,i] = np.fft.fft(A[:,i] - np.mean(A[:,i]))
+        b[:,i] = np.conjugate(np.fft.fft(B[:,i]- np.mean(B[:,i])))
+    #Multiply all columns of matrix a by all columns of matrix b.
+    C = (a[...,None]*b[:,None]).reshape(a.shape[0],-1)
+    #Calculate the inverse
+    CAB = np.zeros((nSteps, nNodes*nNodes))
+    for j in range (0, nNodes*nNodes, 1):
+        CAB[:,j] = np.fft.ifft(C[:,j])
     CAB /= nSteps
+
     return CAB
 
-
 CAB = crossCorrelation(sys.argv[1],sys.argv[2])
-#Print the result
-aux = ''
-for line in CAB:
-    for element in line:
-        aux = aux + str(element) + ' '
-    aux = aux + '\n'
 
-print aux
-
+#Print the result in the correct format
+print '\n'.join(' '.join(str(cell) for cell in row) for row in CAB)
 
 #EOF
 
