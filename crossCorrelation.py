@@ -19,12 +19,9 @@ def crossCorrelation(arg1,arg2):
     A = np.loadtxt(str(arg1))
     B = np.loadtxt(str(arg2))
 
-    #Number rows (nSteps) and columns (nNodes). A and B have the same size.
+    #Define params
     nSteps = len(A)
     nNodes = len(A[0])
-    #Checkpoint
-    if len(A) != len(B) or len(A[0]) != len(B[0]):
-        sys.exit("Error: A and B do not have the same size")
 
     #Cross-correlation works as follows:
     #1. Take FFT of each column of both input matrix
@@ -44,7 +41,7 @@ def crossCorrelation(arg1,arg2):
         CAB[:,j] = np.fft.ifft(C[:,j])
     CAB /= nSteps
 
-    return CAB
+    return CAB[0 : nSteps/2, :]
 
 CAB = crossCorrelation(sys.argv[1],sys.argv[2])
 
